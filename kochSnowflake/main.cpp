@@ -37,7 +37,6 @@ void	generation(VertexArray&		vertexArray)
 	
 	for (size_t index = 0; index < vertexArrayCopy.getVertexCount() - 1; index++)
 	{
-		cout << index << '\n';
 		a.x = vertexArrayCopy[index].position.x;
 		a.y = vertexArrayCopy[index].position.y;
 		
@@ -58,11 +57,6 @@ void	generation(VertexArray&		vertexArray)
 		vertexArray.append(Vertex(Vector2f(c.x, c.y), Color::Yellow));
 		vertexArray.append(Vertex(Vector2f(d.x, d.y), Color::Cyan));
 		vertexArray.append(Vertex(Vector2f(e.x, e.y), Color::White));
-		cout << '(' << a.x << ' ' << a.y << ')' << '\n';
-		cout << '(' << b.x << ' ' << b.y << ')' << '\n';
-		cout << '(' << c.x << ' ' << c.y << ')' << '\n';
-		cout << '(' << d.x << ' ' << d.y << ')' << '\n';
-		cout << '(' << e.x << ' ' << e.y << ')' << '\n';
 	}
 }
 
