@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 			index++;
 			iterations = atoi(argv[index]);
 			cout << "New iteration number is: " << iterations << '\n';
-			
+
 			if (iterations < 64)
 			{
 				cout << "Iterations should be bigger than 63" << '\n';

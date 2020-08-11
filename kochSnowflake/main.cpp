@@ -8,8 +8,10 @@
 #define WINDOW_HEIGHT 768
 #define WINDOW_WIDTH 1024
 #define WINDOW_NAME "Fraktal - Koch Snowflake"
+/// MATH FUNCTIONS FOR 60 DEGREES
 #define SIN sqrt(3) / 2.f
 #define COS 1.f / 2
+/// THERE ARE SOME CONSTANTS THAT I USED FOR POSITIONING THE FIGURE ON THE SCREEN
 #define C 320
 #define D 128
 
@@ -18,7 +20,7 @@ using namespace std;
 using namespace sf;
 
 /// ARRAYS FOR THE LINES
-vector<VertexArray>		vertexArray;
+VertexArray		vertexArray;
 
 typedef struct {
 	float x;
@@ -35,6 +37,7 @@ void	generation(VertexArray&		vertexArray)
 	vertexArrayCopy = vertexArray;
 	vertexArray = VertexArray(LinesStrip, 0);
 	
+	/// WE DIVIDE THE LINE INTO 3 SEGMENTS, A - B - D - E AND WE ADD A NEW POINT C THAT FORMS AN EQUILATERAL TRIANGLE WITH B AND D
 	for (size_t index = 0; index < vertexArrayCopy.getVertexCount() - 1; index++)
 	{
 		a.x = vertexArrayCopy[index].position.x;
@@ -49,6 +52,7 @@ void	generation(VertexArray&		vertexArray)
 		d.x = a.x + (e.x - a.x) * (2.f / 3);
 		d.y = a.y + (e.y - a.y) * (2.f / 3);
 		
+		/// FORMULA TO MOVE D BY 60 DEGREES RELATIVE TO B
 		c.x = COS * (d.x - b.x) - SIN * (d.y - b.y) + b.x;
 		c.y = SIN * (d.x - b.x) + COS * (d.y - b.y) + b.y;
 		
@@ -67,49 +71,58 @@ int 	main(int argc, char **argv)
 	{
 		if (!strcmp(argv[1], "-T"))
 		{
-			vertexArray.push_back(VertexArray(LinesStrip, 0));
+			/// WE GENERATE AN EQUILATERAL TRIANGLE USING THE HEIGHT FORMULA L * sqrt(3) / 2
+			vertexArray = VertexArray(LinesStrip, 0);
 	
-			vertexArray[0].append(Vertex(Vector2f(WINDOW_WIDTH / 2 - C, WINDOW_HEIGHT / 2 + D)));	
-			vertexArray[0].append(Vertex(Vector2f(WINDOW_WIDTH / 2 + C, WINDOW_HEIGHT / 2 + D)));
-			vertexArray[0].append(Vertex(Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - C * sqrt(2) + D)));
-			vertexArray[0].append(Vertex(Vector2f(WINDOW_WIDTH / 2 - C, WINDOW_HEIGHT / 2 + D)));	
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH / 2 - C, WINDOW_HEIGHT / 2 + D + D / 2 - D / 16)));	
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH / 2 + C, WINDOW_HEIGHT / 2  + D + D / 2 - D / 16)));
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - C * sqrt(3) + D + D / 2 - D / 16)));
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH / 2 - C, WINDOW_HEIGHT / 2  + D + D / 2 - D / 16)));	
 		}
 		else if (!strcmp(argv[1], "-C"))
 		{
-			vertexArray.push_back(VertexArray(LinesStrip, 0));
-			vertexArray.push_back(VertexArray(LinesStrip, 0));
-			vertexArray.push_back(VertexArray(LinesStrip, 0));
-			vertexArray.push_back(VertexArray(LinesStrip, 0));
+			/// WE GENERATE A SQUARE
+			vertexArray = VertexArray(LinesStrip, 0);
+			
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH - 10, WINDOW_HEIGHT - 10)));
+			vertexArray.append(Vertex(Vector2f(10, WINDOW_HEIGHT - 10)));
+			vertexArray.append(Vertex(Vector2f(10, 10)));
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH - 10, 10)));
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH - 10, WINDOW_HEIGHT - 10)));
 
-			vertexArray[0].append(Vertex(Vector2f(10, 10)));
-			vertexArray[0].append(Vertex(Vector2f(WINDOW_WIDTH - 10, 10)));
+		}
+		else if (!strcmp(argv[1], "-A"))
+		{
+			/// WE GENERATE THE SAME TRIANGLE AS ABOVE, BUT WE DO IT IN INVERSE ORDER TO GENERATE THE ANTISNOWFLAKE
+			vertexArray = VertexArray(LinesStrip, 0);
 			
-			vertexArray[1].append(Vertex(Vector2f(WINDOW_WIDTH - 10, WINDOW_HEIGHT - 10)));
-			vertexArray[1].append(Vertex(Vector2f(10, WINDOW_HEIGHT - 10)));
-			
-			vertexArray[2].append(Vertex(Vector2f(10, WINDOW_HEIGHT - 10)));
-			vertexArray[2].append(Vertex(Vector2f(10, 10)));
-			
-			vertexArray[3].append(Vertex(Vector2f(WINDOW_WIDTH - 10, 10)));
-			vertexArray[3].append(Vertex(Vector2f(WINDOW_WIDTH - 10, WINDOW_HEIGHT - 10)));
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH / 2 - C, WINDOW_HEIGHT / 2 + D + D)));	
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - C * sqrt(3) + D + D)));
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH / 2 + C, WINDOW_HEIGHT / 2  + D + D)));
+			vertexArray.append(Vertex(Vector2f(WINDOW_WIDTH / 2 - C, WINDOW_HEIGHT / 2  + D + D)));	
 		}
 		else
 		{
-			cout << "Usage: " << argv[0] << " < -T | -C >" << '\n';
+			cout << "Usage: " << argv[0] << " < -T | -C | -A >" << '\n';
 			return -1;
 		}
 	}
 	else
 	{
-		cout << "Usage: " << argv[0] << " < -T | -C >" << '\n';
+		cout << "Usage: " << argv[0] << " < -T | -C | -A >" << '\n';
 		return -1;
 	}
 	
+	/// WINDOW AND VIEW
 	RenderWindow 	window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_NAME); /// THE WINDOW
 	View			view;
 	view.setCenter(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 	view.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	window.setView(view);
+	
+	/// KEEPING TRACK OF ZOOM LEVEL
+	unsigned int	zoomLevel = 1;
+	float			moveViewLevel = 50.f;
 	
 	while (window.isOpen())
 	{
@@ -126,33 +139,33 @@ int 	main(int argc, char **argv)
 				/// CLOSE WINDOW WITH ESCAPE KEY
 				if (event.key.code == Keyboard::Escape)
 					window.close();
+					
+				/// GENERATE A NEW LEVEL OF THE FRACTAL
 				if (event.key.code == Keyboard::Space)
-				{
-					for (size_t index = 0; index < vertexArray.size(); index++)
-						generation(vertexArray[index]);
-				}
+					generation(vertexArray);
 				
+				/// MOVE THE VIEW
 				if (event.key.code == Keyboard::Up)
 				{
-					view.move(0, -50.f);
+					view.move(0, -moveViewLevel / zoomLevel);
 					window.setView(view);
 				}
 				
 				if (event.key.code == Keyboard::Down)
 				{
-					view.move(0, 50.f);
+					view.move(0, moveViewLevel / zoomLevel);
 					window.setView(view);
 				}
 				
 				if (event.key.code == Keyboard::Right)
 				{
-					view.move(50.f, 0);
+					view.move(moveViewLevel / zoomLevel, 0);
 					window.setView(view);
 				}
 				
 				if (event.key.code == Keyboard::Left)
 				{
-					view.move(-50.f, 0);
+					view.move(-moveViewLevel / zoomLevel, 0);
 					window.setView(view);
 				}
 			}
@@ -161,24 +174,26 @@ int 	main(int argc, char **argv)
 			{
 				Vector2f viewPos = window.mapPixelToCoords(Vector2i(event.mouseButton.x, event.mouseButton.y));
 				
+				/// ZOOM IN AND ZOOM OUT
 				if (event.mouseButton.button == Mouse::Left)
 				{
 					view.setCenter(viewPos.x, viewPos.y);
 					view.zoom(0.75f);
 					window.setView(view);
+					zoomLevel++;
 				}
 				
 				if (event.mouseButton.button == Mouse::Right)
 				{
 					view.zoom(1 / 0.75f);
 					window.setView(view);
+					zoomLevel--;
 				}
 			}
 		}
 		
-		for (size_t index = 0; index < vertexArray.size(); index++)
-			window.draw(vertexArray[index]);
-			
+		/// DRAW THE FRACTAL, CLEAR THE SCREEN
+		window.draw(vertexArray);
         window.display();
 		window.clear();
 	}
