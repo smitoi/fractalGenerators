@@ -1,10 +1,10 @@
 CC = g++
-SRCS = chaos.cpp
-OBJS = chaos.o
+SRCS = mandelbrot.cpp
+OBJS = mandelbrot.o
 FLAGS = -std=c++11 -c
 LIBS = -lsfml-graphics -lsfml-window -lsfml-system
 
-TARGET=chaosGameFraktal
+TARGET=mandelbrot
 
 all: clean $(TARGET)
 

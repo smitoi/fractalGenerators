@@ -1,6 +1,6 @@
 CC = g++
-SRCS = main.cpp
-OBJS = main.o
+SRCS = koch.cpp
+OBJS = koch.o
 FLAGS = -std=c++11 -c
 LIBS = -lsfml-graphics -lsfml-window -lsfml-system
 

@@ -149,6 +149,8 @@ int 	main(int argc, char **argv)
 				{
 					view.move(0, -moveViewLevel / zoomLevel);
 					window.setView(view);
+					cout << view.getCenter().x << ' ' << view.getCenter().y << '\n';
+					cout << view.getSize().x << ' ' << view.getSize().y << '\n';
 				}
 				
 				if (event.key.code == Keyboard::Down)
