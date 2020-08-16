@@ -1,8 +1,13 @@
 # Fraktal - Mandelbrot Set
 
 ### Usage
-`make`. If you don't have SFML installed you should also use `sudo apt-get install libsfml-dev` to install it. To launch it simply use `./mandelbrot` or click the executable. To move around use WASD or the arrows, to zoom in use left click, to zoom out use right click, and to change the number of iterations (the complexity of the fractal) move the mouse wheel forward (to increase number of maximum iterations) or backwards (to decrease number of maximum iterations)
-You should use one of the following flags:
+`make`. If you don't have SFML installed you should also use `sudo apt-get install libsfml-dev` to install it. To launch it simply use `./mandelbrot` or click the executable. 
+
+#### Instructions:
+* WASD / Arrows: Move the camera around
+* Left Click: Zoom In
+* Right Click: Zoom Out
+* Mouse Wheel: Increase or decrease the maximum iterations value
 
 ### Resources:
 * [SFML Learn](https://www.sfml-dev.org/learn.php)
