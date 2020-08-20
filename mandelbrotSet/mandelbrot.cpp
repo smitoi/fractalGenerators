@@ -1,26 +1,59 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <thread>
+#include <vector>
 
 using namespace std;
 using namespace sf;
 
-/// DEFINES
-#define WINDOW_HEIGHT 720
+/// WINDOW VALUES - The size and the name of the window
 #define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 #define WINDOW_NAME "Fraktal - Mandelbrot Set"
+/// MULTITHREADING VALUES - There will be HEIGHT_THREAD x WIDTH_THREAD threads since I divide the screen into boxes that I render individually
+#define WIDTH_THREAD 16
+#define HEIGHT_THREAD 16
+/// DEFINES FOR INPUT CONTROL
+#define MOVE_FACTOR 0.025
 
 
 
+/// A NORMAL WINDOW PROVIDED BY SFML
+RenderWindow 	window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_NAME, Style::Close);
 
-/// USES A FORMULA TO SCALE THE VALUE FROM THE INTERVAL [min, max] TO THE INTERVAL [a, b]
+/// RENDERING VARIABLES - I load the image to a texture that gets applied to a sprite, and then I draw the sprite
+Image			image;
+Texture			texture;
+Sprite 			sprite;
+
+/// GUI VARIABLES - I use this to render a small GUI
+Font            font;
+RectangleShape  loadingOverlay;
+Text            loadingText;
+
+/// BOOL VARIABLE - Keeps track of the image changes so it will not get rendered each frame
+bool			changed = true;
+
+/// UNSIGNED VARIABLE - Keeps track of the maximum iterations value
+unsigned int	maxIt = 256;
+
+/// DOUBLE VARIABLES - First variable is used to keep track of the zoom, the other values are used to keep track of the values of the complex plane used to generate the Mandelbrot Set
+double	zoomLevel = 1;
+double	minRe = -2.5;
+double  maxRe = 1;
+double  minIm = -1;
+double 	maxIm = 1;
+
+
+
+/// SCALE DOWN FUNCTION - Uses a formula to scale a value from the interval [min, max] to the iterval [a, b]
 double	scaleDown(double value, double min, double max, double a, double b)
 {
 	return	((b - a) * (value - min)) / (max - min) + a;
 }
 
 
-
-/// ZOOM FUNCTION
+/// ZOOM FUNCTION - Generates new values for the complex plane
 void 	zoom (double& minRe, double& maxRe, double& minIm, double& maxIm, double x, double y, double zoomLevel)
 {
 	double newCenterRe = scaleDown(x, 0, WINDOW_WIDTH, minRe, maxRe);
@@ -30,9 +63,45 @@ void 	zoom (double& minRe, double& maxRe, double& minIm, double& maxIm, double x
 
 	minRe = newCenterRe - diffRe;
 	maxRe = newCenterRe + diffRe;
-					
+
 	minIm = newCenterIm - diffIm;
 	maxIm = newCenterIm + diffIm;
+}
+
+
+/// GENERATE FUNCTION - Computes the image in a square with the upper left point [startRe, startIm] and the lower right point [endRe, endIm]
+void    generateFractalImage(unsigned int startRe, unsigned int endRe, unsigned int startIm, unsigned int endIm)
+{
+    /// The coloring function is taken from Stack Overflow
+    auto coloringFunction = [](unsigned int iteration, unsigned int phase) {
+        return (255 * pow(cos(sqrt(iteration) + phase), 2));
+    };
+
+    for (unsigned int x = startRe; x < endRe; x++)
+    {
+        for (unsigned int y = startIm; y < endIm; y++)
+        {
+            double	scaledRe = scaleDown(x, 0, WINDOW_WIDTH, minRe, maxRe);
+            double 	scaledIm = scaleDown(y, 0, WINDOW_HEIGHT, minIm, maxIm);
+            double 	re = 0;
+            double 	im = 0;
+            int		iteration = 0;
+
+            for (iteration = 0; iteration < maxIt && re * re + im * im < 2 * 2; iteration++)
+            {
+                double temp = re * re - im * im + scaledRe;
+                im = 2 * re * im + scaledIm;
+                re = temp;
+            }
+
+            if (iteration != maxIt)
+                image.setPixel(x, y, Color(coloringFunction(iteration, 0),
+                                           coloringFunction(iteration, 120),
+                                           coloringFunction(iteration, 240)));
+            else
+                image.setPixel(x, y, Color(0, 0, 0));
+        }
+    }
 }
 
 
@@ -41,153 +110,112 @@ int 	main(int argc, char **argv)
 {
 	if (argc != 1)
 		return -1;
-	
-	/// WINDOW
-	RenderWindow 	window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), WINDOW_NAME);
 
-	Image			image;
-	image.create(WINDOW_WIDTH, WINDOW_HEIGHT);
-	Texture			texture;
-	Sprite 			sprite;
-	
-	bool			changed = true;
-	
-	double			zoomLevel = 1;
-	double	minRe = -2.5;
-	double  maxRe = 1;
-	double  minIm = -1;
-	double 	maxIm = 1;
+    image.create(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-	unsigned int	maxIt = 1024;
-	
-	vector<Color> colorMap = {
-		Color(66, 30, 15),
-		Color(25, 7, 26),
-		Color(9, 1, 47),
-		Color(4, 4, 73),
-		Color(0, 7, 100),
-		Color(12, 44, 138),
-		Color(24, 82, 177),
-		Color(57, 125, 209),
-		Color(134, 181, 229),
-		Color(211, 236, 248),
-		Color(241, 233, 191),
-		Color(248, 201, 95),
-		Color(255, 170, 0),
-		Color(204, 128, 0),
-		Color(153, 87, 0),
-		Color(106, 52, 3)
-	};
-	
 	while (window.isOpen())
 	{
 		Event event;
-		
+
        	while (window.pollEvent(event))
        	{
-			/// CLOSE WINDOW WITH X
+			/// Close window with X
 			if (event.type == Event::Closed)
 				window.close();
 
 			if (event.type == Event::KeyPressed)
 			{
-				/// CLOSE WINDOW WITH ESCAPE KEY
+				/// Close window with escape key
 				if (event.key.code == Keyboard::Escape)
 					window.close();
-			
-				
-				/// MOVE THE VIEW
+
+
+				/// Move the view using the arrows or WASD
 				if (event.key.code == Keyboard::Up || event.key.code == Keyboard::W)
 				{
-					minIm -= (maxIm - minIm) * 0.1;
-					maxIm -= (maxIm - minIm) * 0.1;
+					minIm -= (maxIm - minIm) * MOVE_FACTOR;
+					maxIm -= (maxIm - minIm) * MOVE_FACTOR;
 					changed = true;
 				}
-				
 				if (event.key.code == Keyboard::Down || event.key.code == Keyboard::S)
 				{
-					minIm += (maxIm - minIm) * 0.1;
-					maxIm += (maxIm - minIm) * 0.1;
+					minIm += (maxIm - minIm) * MOVE_FACTOR;
+					maxIm += (maxIm - minIm) * MOVE_FACTOR;
 					changed = true;
 				}
-				
 				if (event.key.code == Keyboard::Right || event.key.code == Keyboard::D)
 				{
-					minRe += (maxRe - minRe) * 0.1;
-					maxRe += (maxRe - minRe) * 0.1;
+					minRe += (maxRe - minRe) * MOVE_FACTOR;
+					maxRe += (maxRe - minRe) * MOVE_FACTOR;
 					changed = true;
 				}
-				
 				if (event.key.code == Keyboard::Left || event.key.code == Keyboard::A)
 				{
-					minRe -= (maxRe - minRe) * 0.1;
-					maxRe -= (maxRe - minRe) * 0.1;
+					minRe -= (maxRe - minRe) * MOVE_FACTOR;
+					maxRe -= (maxRe - minRe) * MOVE_FACTOR;
 					changed = true;
 				}
-				
-			}
-			
+            }
+
 			if (event.type == Event::MouseButtonPressed)
-			{		
-				/// ZOOM IN WITH LEFT CLICK, ZOOM OUT WITH RIGHT CLICK
+			{
+				/// LEFT CLICK - Zoom In
 				if (event.mouseButton.button == Mouse::Left)
 				{
-					zoom(minRe, maxRe, minIm, maxIm, event.mouseButton.x, event.mouseButton.y, 8);		
+					zoom(minRe, maxRe, minIm, maxIm, event.mouseButton.x, event.mouseButton.y, 8);
 					zoomLevel *= 8;
 					cout << "Zoom in: " << zoomLevel << '\n';
 				}
-					
+                /// RIGHT CLICK - Zoom Out
 				if (event.mouseButton.button == Mouse::Right)
 				{
-					zoom(minRe, maxRe, minIm, maxIm, event.mouseButton.x, event.mouseButton.y, 1.0 / 8);		
+					zoom(minRe, maxRe, minIm, maxIm, event.mouseButton.x, event.mouseButton.y, 1.0 / 2);
 					zoomLevel /= 8;
 					cout << "Zoom out: " << zoomLevel << '\n';
 				}
+
 				changed = true;
 			}
-			
+
+            /// Change the number of maximum iterations computed using the mouse wheel
 			if (event.type == Event::MouseWheelScrolled)
 			{
-				if (event.mouseWheelScroll.delta < 0 && maxIt != 1) 
+				if (event.mouseWheelScroll.delta < 0 && maxIt != 1)
 					maxIt /= 2;
-				else 
+				else
 					maxIt *= 2;
-				
+
 				cout << "Iterations: " << maxIt << '\n';
 				changed = true;
 			}
 		}
-		
+
 		if (changed)
 		{
-			for (unsigned int x = 0; x < WINDOW_WIDTH; x++)
-				for (unsigned int y = 0; y < WINDOW_HEIGHT; y++)
-				{
-					double	scaledRe = scaleDown(x, 0, WINDOW_WIDTH, minRe, maxRe);
-					double 	scaledIm = scaleDown(y, 0, WINDOW_HEIGHT, minIm, maxIm);
-					double 	re = 0;
-					double 	im = 0;
-					int		iteration = 0;
-							
-					for (iteration = 0; iteration < maxIt && re * re + im * im < 2 * 2; iteration++)
-					{
-						double temp = re * re - im * im + scaledRe;
-						im = 2 * re * im + scaledIm;
-						re = temp;
-					}
-					
-					if (iteration != maxIt)
-						image.setPixel(x, y, colorMap[iteration % 16]);
-					else
-						image.setPixel(x, y, Color(0, 0, 0));
-				}
+		    /// We use a vector of threads to compute the image faster - the clock is used for debug purposes
+		    Clock           clock;
+		    vector<thread>  threadVector;
+
+            cout << "Changed view: " << '\n' << "RE: [" << minRe << ", " << maxRe << "];" << '\n' << "IM: [" << minIm << ", " << maxIm << "];" << '\n';
+
+            /// We generate the threads and wait for them to end
+            for (unsigned int x = 0; x < WINDOW_WIDTH; x += WINDOW_WIDTH / WIDTH_THREAD)
+                for (unsigned int y = 0; y < WINDOW_HEIGHT; y += WINDOW_HEIGHT / HEIGHT_THREAD)
+                    threadVector.push_back(thread(generateFractalImage, x, x + WINDOW_WIDTH / WIDTH_THREAD, y, y + WINDOW_HEIGHT / HEIGHT_THREAD));
+                    
+            for (thread & th : threadVector)
+                if (th.joinable())
+                    th.join();
+
+            cout << "Time taken by generation: " << clock.getElapsedTime().asMilliseconds() << " microseconds" << endl;
+
+            /// We update the image, texture and sprite
 			texture.loadFromImage(image);
 			sprite.setTexture(texture);
 			changed = false;
 		}
-		
-			
-		/// DRAW THE FRACTAL, CLEAR THE SCREEN
+
+		/// Draw the sprite (fractal) and clear the screen
 		window.draw(sprite);
         window.display();
 		window.clear();
