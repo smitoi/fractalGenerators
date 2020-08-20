@@ -1,4 +1,4 @@
-# Fraktal
+# Fractal Generators
 
 ### Description
 This started as a little project of mine to work with C++ and SFML to generate the Mandlebrot set, but I expanded it to include more fractals. While doing this project I learned a lot of about 2D geometry, and also discovered some cool concepts about computer graphics. Each fractal generator is located in a separate folder.
