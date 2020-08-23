@@ -37,7 +37,7 @@ bool			changed = true;
 
 /// UNSIGNED VARIABLE - Keeps track of the maximum iterations value and the type of fractal we are generating
 unsigned int	maxIt = 256;
-unsigned int	type = -1;
+bool			julia = false;
 
 /// DOUBLE VARIABLES - First variable is used to keep track of the zoom, the other values are used to keep track of the values of the complex plane used to generate the image
 double	zoomLevel = 1;
@@ -70,15 +70,17 @@ void 	zoom (double& minRe, double& maxRe, double& minIm, double& maxIm, double x
 	maxIm = newCenterIm + diffIm;
 }
 
-/// GENERATE FUNCTIONS - Computes the image in a square with the upper left point [startRe, startIm] and the lower right point [endRe, endIm]
 
+/// The coloring function is taken from Stack Overflow
+unsigned int	coloringFunction(unsigned int iteration, unsigned int phase)
+{
+	return (255 * pow(cos(sqrt(iteration) + phase), 2));
+}
+
+
+/// GENERATE FUNCTIONS - Computes the image in a square with the upper left point [startRe, startIm] and the lower right point [endRe, endIm]
 void    generateMandelbrotFractal(unsigned int startRe, unsigned int endRe, unsigned int startIm, unsigned int endIm)
 {
-    /// The coloring function is taken from Stack Overflow
-    auto coloringFunction = [](unsigned int iteration, unsigned int phase) {
-        return (255 * pow(cos(sqrt(iteration) + phase), 2));
-    };
-
     for (unsigned int x = startRe; x < endRe; x++)
     {
         for (unsigned int y = startIm; y < endIm; y++)
@@ -106,14 +108,8 @@ void    generateMandelbrotFractal(unsigned int startRe, unsigned int endRe, unsi
     }
 }
 
-
 void    generateJuliaFractal(unsigned int startRe, unsigned int endRe, unsigned int startIm, unsigned int endIm)
 {
-    /// The coloring function is taken from Stack Overflow
-    auto coloringFunction = [](unsigned int iteration, unsigned int phase) {
-        return (255 * pow(cos(sqrt(iteration) + phase), 2));
-    };
-
     for (unsigned int x = startRe; x < endRe; x++)
     {
         for (unsigned int y = startIm; y < endIm; y++)
@@ -130,6 +126,35 @@ void    generateJuliaFractal(unsigned int startRe, unsigned int endRe, unsigned 
 
                 re = newRe;
                 im = newIm;
+            }
+
+            if (iteration != maxIt)
+                image.setPixel(x, y, Color(coloringFunction(iteration, 0),
+                                           coloringFunction(iteration, 120),
+                                           coloringFunction(iteration, 240)));
+            else
+                image.setPixel(x, y, Color(0, 0, 0));
+        }
+    }
+}
+
+void    generateBurningShip(unsigned int startRe, unsigned int endRe, unsigned int startIm, unsigned int endIm)
+{
+    for (unsigned int x = startRe; x < endRe; x++)
+    {
+        for (unsigned int y = startIm; y < endIm; y++)
+        {
+            double	scaledRe = scaleDown(x, 0, WINDOW_WIDTH, minRe, maxRe);
+            double 	scaledIm = scaleDown(y, 0, WINDOW_HEIGHT, minIm, maxIm);
+            double 	re = 0;
+            double 	im = 0;
+            int		iteration = 0;
+
+            for (iteration = 0; iteration < maxIt && re * re + im * im < 2 * 2; iteration++)
+            {
+                double temp = re * re - im * im + scaledRe;
+                im = abs(2 * re * im) + scaledIm;
+                re = temp;
             }
 
             if (iteration != maxIt)
@@ -160,25 +185,33 @@ void	generateFractal(void	(&f)(unsigned int, unsigned int, unsigned int, unsigne
 /// MAIN FUNCTION
 int 	main(int argc, char **argv)
 {
+	void	(*func)(unsigned int, unsigned int, unsigned int, unsigned int);
+	
 	if (argc != 2)
 	{
-		cout << "Usage: " << argv[0] << " {mandelbrot | julia} " << '\n';
+		cout << "Usage: " << argv[0] << " {mandelbrot | julia | burningship} " << '\n';
 		return -1;
 	}
 	
 	if (!strcmp(argv[1], "mandelbrot"))
 	{
-		type = 1;
+		func = generateMandelbrotFractal;
 		window.setTitle("Fraktal - Mandelbrot Set");
 	}
 	else if (!strcmp(argv[1], "julia"))
 	{
+		func = generateJuliaFractal;
 		window.setTitle("Fraktal - Julia Set");
-		type = 2;
-	}	
+		julia = true;
+	}
+	else if (!strcmp(argv[1], "burningship"))
+	{
+		func = generateBurningShip;
+		window.setTitle("Fraktal - Burning Ship");
+	}
 	else
 	{
-		cout << "Usage: " << argv[0] << " {mandelbrot | julia} " << '\n';
+		cout << "Usage: " << argv[0] << " {mandelbrot | julia | burningship} " << '\n';
 		return -1;
 	}
 
@@ -232,22 +265,22 @@ int 	main(int argc, char **argv)
 					maxRe -= (maxRe - minRe) * MOVE_FACTOR;
 					changed = true;
 				}
-				if (type == 2 && event.key.code == Keyboard::Z)
+				if (julia == true && event.key.code == Keyboard::Z)
 				{
 					cRe += 0.01;
 					changed = true;
 				}
-				if (type == 2 && event.key.code == Keyboard::X)
+				if (julia == true && event.key.code == Keyboard::X)
 				{
 					cRe -= 0.01;
 					changed = true;
 				}
-				if (type == 2 && event.key.code == Keyboard::C)
+				if (julia == true && event.key.code == Keyboard::C)
 				{
 					cIm += 0.01;
 					changed = true;
 				}
-				if (type == 2 && event.key.code == Keyboard::V)
+				if (julia == true && event.key.code == Keyboard::V)
 				{
 					cIm -= 0.01;
 					changed = true;
@@ -299,11 +332,8 @@ int 	main(int argc, char **argv)
 			
             cout << "Changed view: " << '\n' << "RE: [" << minRe << ", " << maxRe << "];" << '\n' << "IM: [" << minIm << ", " << maxIm << "];" << '\n';
 
-			if (type == 1)
-				generateFractal(generateMandelbrotFractal);
-			else if (type == 2)
-				generateFractal(generateJuliaFractal);
-
+			generateFractal(*func);
+				
             cout << "Time taken by generation: " << clock.getElapsedTime().asMilliseconds() << " microseconds" << endl;
             
             /// We update the image, texture and sprite
