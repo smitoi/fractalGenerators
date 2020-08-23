@@ -167,7 +167,7 @@ void    generateBurningShip(unsigned int startRe, unsigned int endRe, unsigned i
     }
 }
 
-/// We use this function with a reference to the generator we want to use (Mandelbrot or Julia), diving the screen and generating each box in a differend thread
+/// We use this function with a reference to the generator we want to use (Mandelbrot, Julia or Burning Ship), diving the screen and generating each box in a differend thread
 void	generateFractal(void	(&f)(unsigned int, unsigned int, unsigned int, unsigned int) )
 {
 	vector<thread>  threadVector;
