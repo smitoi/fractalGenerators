@@ -30,6 +30,6 @@ Read the [documentation](https://www.sfml-dev.org/tutorials/2.5/) and setup SFML
 
     * [Mandlebrot Set](https://en.wikipedia.org/wiki/Mandelbrot_set)
     
-    * ~~Julia Set~~
+    * [Julia Set](https://en.wikipedia.org/wiki/Burning_Ship_fractal)
     
-    * ~~Burning Ship~~
+    * [Burning Ship](https://en.wikipedia.org/wiki/Burning_Ship_fractal)
