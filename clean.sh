@@ -1,4 +1,4 @@
-folders=(chaosGameFractal kochSnowflake mandelbrotSet)
+folders=(chaosGameFractal kochSnowflake complex)
 for folder in ${folders[@]}; do
 	cd $folder
 	make clean
