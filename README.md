@@ -18,8 +18,7 @@ Read the [documentation](https://www.sfml-dev.org/tutorials/2.5/) and setup SFML
 
 ### Fractals included:
 
-    * [Mandlebrot Set](https://en.wikipedia.org/wiki/Mandelbrot_set)
+* [Mandlebrot Set](https://en.wikipedia.org/wiki/Mandelbrot_set)
+* [Julia Set](https://en.wikipedia.org/wiki/Burning_Ship_fractal)
+* [Burning Ship](https://en.wikipedia.org/wiki/Burning_Ship_fractal)
     
-    * [Julia Set](https://en.wikipedia.org/wiki/Burning_Ship_fractal)
-    
-    * [Burning Ship](https://en.wikipedia.org/wiki/Burning_Ship_fractal)
